@@ -1,70 +1,80 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <unistd.h>
+// #include <string.h>
 
-#include <net/if.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+// #include <net/if.h>
+// #include <sys/types.h>
+// #include <sys/socket.h>
+// #include <sys/ioctl.h>
 
-#include <linux/can.h>
-#include <linux/can/raw.h>
+// #include <linux/can.h>
+// #include <linux/can/raw.h>
 
 #include "CAN.h"
 
-ros::Publisher CAN_pub;
-CANbus CANbus;
-usbCAN_pkg::CAN_msg CAN_output_msg;
+void handleFrame01A(const can::Frame &f){
 
-int timer_CAN_Callback(const ros::TimerEvent& )
+	ROS_INFO("revieve CAN frames ok");
+    // handle specific frame ----------> uu tien xu ly truoc
+    //LOG("123? " << can::tostring(f, true)); // lowercase: true
+//     std::stringstream ss;
+//     can_float.byte.byte1 = f.data[0];
+//     can_float.byte.byte2 = f.data[1];
+//     can_float.byte.byte3 = f.data[2];
+//     can_float.byte.byte4 = f.data[3];
+}
+
+// CANbus CANBus;
+void processCanTxEvent(const ros::TimerEvent& )
 {
-    CAN_output_msg.id = CANbus.CAN_output.id;
-    CAN_pub.publish(CAN_output_msg);
+	can::Frame canTx;
+	// sockaddr_can addr;
+	canTx.id = 0x01B;
+	canTx.dlc = 2;
+	canTx.data[0] = 0x11;
+	canTx.data[1] = 0x22;
+
+    // Writing CAN frames
+    if (driver.send(canTx))
+    {
+        ROS_INFO("Writing CAN frames ok");
+    }
+        
+    canTx_msg.id = canTx.id;
+    canTx_msg.length = canTx.dlc;
+    can_publisher.publish(canTx_msg);
     ROS_INFO("publish message ok");
 
-	int s;
-	int nbytes;
-	struct sockaddr_can addr;
-	struct can_frame frame;
-	struct ifreq ifr;
-
-	const char *ifname = "vcan0";
-
-	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) == -1) {
-		perror("Error while opening socket");
-		return -1;
-	}
-
-	strcpy(ifr.ifr_name, ifname);
-	ioctl(s, SIOCGIFINDEX, &ifr);
-	
-	addr.can_family  = AF_CAN;
-	addr.can_ifindex = ifr.ifr_ifindex;
-
-	printf("%s at index %d\n", ifname, ifr.ifr_ifindex);
-
-	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-		perror("Error in socket bind");
-		return -2;
-	}
-
-	frame.can_id  = 0x123;
-	frame.can_dlc = 2;
-	frame.data[0] = 0x11;
-	frame.data[1] = 0x22;
-
-    nbytes = write(s, &frame, sizeof(struct can_frame));
-	printf("Wrote %d bytes\n", nbytes);
+    // return 0;
 }
+
+can::CommInterface::FrameListener::ListenerConstSharedPtr one_frame = driver.createMsgListener(can::MsgHeader(0x01A), handleFrame01A);
 
 int main (int argc, char** argv)
 {
-    ros::init(argc, argv, "CAN");
-    ros::NodeHandle nh;
-    CAN_pub = nh.advertise<usbCAN_pkg::CAN_msg>("CAN_Data", 1000);
-    ros::Timer timer_CAN = nh.createTimer(ros::Duration(0.05), timer_CAN_Callback);
+    ros::init(argc, argv, "can_node");
 
+	ros::NodeHandle n("~");
+    ros::NodeHandle nh;
+
+	n.param<string>("device", device, "slcan0");
+	n.param<string>("publisher_topic", publisher_topic, "can_publisher");
+	n.param<string>("subscriber_topic", subscriber_topic, "can_subscriber");
+
+
+	if(driver.init("slcan0", false))
+	{
+		ROS_ERROR("Could not open device: %s",device.c_str());
+		// return -1;
+	}
+
+	can_publisher = nh.advertise<usbcan_pkg::can_msg>("publisher_topic",1000);
+	// can_subscriber = nh.subscribe(subscriber_topic.c_str(), 1000, canRxHandler);
+	// CAN_pub = nh.advertise<usbCAN_pkg::CAN_msg>("CAN_Data", 1000);
+
+	ros::Timer timer_CAN = nh.createTimer(ros::Duration(0.5), processCanTxEvent);
+    
     // While loop do nothing, data received by interrupt
     while(ros::ok())
     {

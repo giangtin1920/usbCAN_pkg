@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(usbCAN_pkg)
+project(usbcan_pkg)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -50,7 +50,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  CAN_msg.msg
+  can_msg.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -105,7 +105,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES usbCAN_pkg
+  LIBRARIES usbcan_pkg
   CATKIN_DEPENDS roscpp rospy std_msgs
   DEPENDS system_lib
 )
@@ -124,7 +124,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/usbCAN_pkg.cpp
+#   src/${PROJECT_NAME}/usbcan_pkg.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,7 +135,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/usbCAN_pkg_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/usbcan_pkg_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -199,7 +199,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_usbCAN_pkg.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_usbcan_pkg.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
@@ -212,7 +212,7 @@ add_executable(
   src/listener_CAN.cpp
 )
 target_link_libraries(listener_CAN ${catkin_LIBRARIES})
-add_dependencies(listener usbCAN_pkg_generate_messages_cpp)
+add_dependencies(listener_CAN usbcan_pkg_generate_messages_cpp)
 
 add_executable(
   CAN 
@@ -220,4 +220,4 @@ add_executable(
   src/CAN_init.cpp
 )
 target_link_libraries(CAN ${catkin_LIBRARIES})
-add_dependencies(radar usbCAN_pkg_generate_messages_cpp)
+add_dependencies(CAN usbcan_pkg_generate_messages_cpp)

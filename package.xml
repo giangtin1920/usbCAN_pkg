@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>usbCAN_pkg</name>
+  <name>usbcan_pkg</name>
   <version>0.0.0</version>
   <description>The usbCAN_pkg package</description>
 
